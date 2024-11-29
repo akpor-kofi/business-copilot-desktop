@@ -38,15 +38,29 @@ build_expo: update_app_output update_env_file
 	rm -rf $(FRONTEND_DIR)/dist
 	@echo "Copying new dist folder to frontend..."
 	cp -r $(WEBAPP_DIR)/dist $(FRONTEND_DIR)
+	@echo "Removing old drizzle folder..."
+	rm -rf $(FRONTEND_DIR)/drizzle
+	@echo "Copying new drizzle folder to frontend..."
+	cp -r $(WEBAPP_DIR)/drizzle $(FRONTEND_DIR)
+
+clear_metro_cache:
+	@rm -rf $(TMPDIR)/metro-cache
 
 # Wails development build (requires expo build first)
-dev: build_expo
+dev: clear_metro_cache build_expo
 	@echo "Running Wails dev..."
-	wails dev
+	wails build -devtools
 	@$(MAKE) reset_app_output reset_env_file  # Reset both app.json and .env after dev
 
 # Wails production build (requires expo build first)
 build: build_expo
 	@echo "Building Wails app..."
 	wails build
-	@$(MAKE) reset_app_output reset_env_file  # Reset both app.json and .env after build
+	@$(MAKE) reset_app_output reset_env_file
+
+wails_build_and_publish:
+	@echo "Building Wails project..."
+	wails build
+	@echo "Packaging Wails main functions..."
+	bash ./scripts/package-wails-main.sh
+
