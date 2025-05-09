@@ -1,9 +1,11 @@
-build/bin
 node_modules
-frontend/dist
 .idea
 # macOS
 .DS_Store
 build/.DS_Store
-drizzle
-npm-wails-main
+
+.vscode
+.webpack
+dist
+# Ignore everything in out except make directory
+out

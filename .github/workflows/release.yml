@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Trigger on version tags
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    
+    steps:
+      - name: Checkout desktop app
+        uses: actions/checkout@v3
+        with:
+          path: desktop
+
+      - name: Checkout webapp
+        uses: actions/checkout@v3
+        with:
+          repository: akpor-kofi/business-copilot-webapp
+          token: ${{ secrets.WEBAPP_PAT }}
+          path: webapp
+          ref: master  # Explicitly specify the branch
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Build webapp first
+      - name: Install webapp dependencies
+        working-directory: webapp
+        run: npm install
+
+      - name: Build webapp
+        working-directory: webapp
+        run: |
+          npm run build:prod:electron-web
+          cp -r dist ../desktop/
+
+      # Now build desktop app
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install
+
+      - name: Build and Package Electron app
+        working-directory: desktop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run make
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: false
+          files: desktop/out/make/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
