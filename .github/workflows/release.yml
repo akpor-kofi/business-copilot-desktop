@@ -25,6 +25,7 @@ jobs:
           repository: akpor-kofi/business-copilot-webapp
           token: ${{ secrets.WEBAPP_PAT }}
           path: webapp
+          ref: master  # Explicitly specify the branch
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
