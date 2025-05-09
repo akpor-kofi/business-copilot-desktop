@@ -7,6 +7,9 @@ ENV_FILE=$(WEBAPP_DIR)/.env
 # Backup the original ENV file
 ENV_BACKUP=$(WEBAPP_DIR)/.env.backup
 
+# Paths for @powersync/worker assets
+WORKER_ASSETS=$(WEBAPP_DIR)/assets/@powersync/worker
+
 # Update app.json build output
 update_app_output:
 	@echo "Updating Expo build mode to: $(BUILD_MODE)..."
@@ -30,6 +33,13 @@ reset_env_file:
 	cp $(ENV_BACKUP) $(ENV_FILE)
 	rm -f $(ENV_BACKUP)
 
+
+# Copy @powersync/worker assets after Expo export
+copy_worker_assets:
+	@echo "Copying @powersync/worker assets..."
+	mkdir -p $(FRONTEND_DIR)/dist/assets/@powersync/worker
+	cp -r $(WORKER_ASSETS)/* $(FRONTEND_DIR)/dist/assets/@powersync/worker
+
 # Build expo app and copy dist folder
 build_expo: update_app_output update_env_file
 	@echo "Building expo app..."
@@ -38,10 +48,7 @@ build_expo: update_app_output update_env_file
 	rm -rf $(FRONTEND_DIR)/dist
 	@echo "Copying new dist folder to frontend..."
 	cp -r $(WEBAPP_DIR)/dist $(FRONTEND_DIR)
-	@echo "Removing old drizzle folder..."
-	rm -rf $(FRONTEND_DIR)/drizzle
-	@echo "Copying new drizzle folder to frontend..."
-	cp -r $(WEBAPP_DIR)/drizzle $(FRONTEND_DIR)
+	@$(MAKE) copy_worker_assets
 
 clear_metro_cache:
 	@rm -rf $(TMPDIR)/metro-cache
@@ -57,10 +64,3 @@ build: build_expo
 	@echo "Building Wails app..."
 	wails build
 	@$(MAKE) reset_app_output reset_env_file
-
-wails_build_and_publish:
-	@echo "Building Wails project..."
-	wails build
-	@echo "Packaging Wails main functions..."
-	bash ./scripts/package-wails-main.sh
-
