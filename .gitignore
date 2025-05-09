@@ -6,6 +6,6 @@ build/.DS_Store
 
 .vscode
 .webpack
-.dist
+dist
 # Ignore everything in out except make directory
 out
